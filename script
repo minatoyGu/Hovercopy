@@ -1,0 +1,55 @@
+// ==UserScript==
+// @name         Copy Taobao Item Title on Hover
+// @namespace    your-namespace-here
+// @version      1.2
+// @description  Copies Taobao item title to clipboard when hovered for 1 second and shows a reminder to the user when successful next to the mouse cursor and smaller in size
+// @author       Edwin Yeung
+// @match        https://*.taobao.com/*
+// @grant        GM_setClipboard
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    let hoverTimeout;
+
+    // Listen for mouseover events on item titles
+    document.addEventListener('mouseover', function(event) {
+        if (event.target.classList.contains('img-item-title-link')) {
+            // Clear any existing hover timeout
+            clearTimeout(hoverTimeout);
+
+            // Set a new hover timeout to copy title to clipboard
+            hoverTimeout = setTimeout(function() {
+                let title = event.target.title;
+                GM_setClipboard(title);
+                showReminder(event.clientX, event.clientY);
+            }, 1000);
+        }
+    });
+
+    // Listen for mouseout events on item titles to clear hover timeout
+    document.addEventListener('mouseout', function(event) {
+        if (event.target.classList.contains('img-item-title-link')) {
+            clearTimeout(hoverTimeout);
+        }
+    });
+
+    // Function to show reminder to user
+    function showReminder(x, y) {
+        let reminder = document.createElement('div');
+        reminder.innerHTML = 'Title copied!';
+        reminder.style.position = 'fixed';
+        reminder.style.top = y + 'px';
+        reminder.style.left = x + 'px';
+        reminder.style.padding = '5px';
+        reminder.style.fontSize = '12px';
+        reminder.style.backgroundColor = '#fff';
+        reminder.style.border = '1px solid #000';
+        reminder.style.borderRadius = '5px';
+        document.body.appendChild(reminder);
+        setTimeout(function() {
+            reminder.parentNode.removeChild(reminder);
+        }, 3000);
+    }
+})();
