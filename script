@@ -1,11 +1,12 @@
 // ==UserScript==
-// @name         Copy Taobao Item Title on Hover
+// @name         Copy Taobao Item Title and Download Image on Hover
 // @namespace    your-namespace-here
-// @version      1.2
-// @description  Copies Taobao item title to clipboard when hovered for 1 second and shows a reminder to the user when successful next to the mouse cursor and smaller in size
-// @author       Edwin Yeung
+// @version      1.5
+// @description  Copies Taobao item title to clipboard and downloads image when hovered over for 1 second on a Taobao item page and shows a reminder to the user when successful next to the mouse cursor and smaller in size for both actions separately and a "Pending..." message while the image is being downloaded. 
+// @author       your-name
 // @match        https://*.taobao.com/*
 // @grant        GM_setClipboard
+// @grant        GM_download
 // ==/UserScript==
 
 (function() {
@@ -23,7 +24,7 @@
             hoverTimeout = setTimeout(function() {
                 let title = event.target.title;
                 GM_setClipboard(title);
-                showReminder(event.clientX, event.clientY);
+                showReminder('Copy to clipboard!', event.clientX, event.clientY);
             }, 1000);
         }
     });
@@ -35,10 +36,65 @@
         }
     });
 
+    // Listen for mouseover events on item images
+    document.addEventListener('mouseover', function(event) {
+        if (event.target.classList.contains('img-controller-img')) {
+            // Clear any existing hover timeout
+            clearTimeout(hoverTimeout);
+
+            // Set a new hover timeout to download image
+            hoverTimeout = setTimeout(function() {
+                let imageUrl = event.target.src.replace('_160x160xz.jpg', '');
+                let pendingMessage = showPendingMessage(event.target);
+                let title = event.target.alt;
+                GM_download({
+                    url: imageUrl,
+                    name: title + '.jpg',
+                    onerror: function() {
+                        pendingMessage.parentNode.removeChild(pendingMessage);
+                    },
+                    ontimeout: function() {
+                        pendingMessage.parentNode.removeChild(pendingMessage);
+                    },
+                    onloadend: function() {
+                        pendingMessage.parentNode.removeChild(pendingMessage);
+                        showReminder('Image downloaded!', event.clientX, event.clientY);
+                    }
+                });
+            }, 1000);
+        }
+    });
+
+    // Listen for mouseout events on item images to clear hover timeout
+    document.addEventListener('mouseout', function(event) {
+        if (event.target.classList.contains('img-controller-img')) {
+            clearTimeout(hoverTimeout);
+        }
+    });
+
+    // Function to show pending message to user
+    function showPendingMessage(image) {
+        let pendingMessage = document.createElement('div');
+        pendingMessage.innerHTML = 'Pending...';
+        pendingMessage.style.position = 'absolute';
+        pendingMessage.style.top = image.offsetTop + 'px';
+        pendingMessage.style.left = image.offsetLeft + 'px';
+        pendingMessage.style.width = image.width + 'px';
+        pendingMessage.style.height = image.height + 'px';
+        pendingMessage.style.display = 'flex';
+        pendingMessage.style.justifyContent = 'center';
+        pendingMessage.style.alignItems = 'center';
+        pendingMessage.style.fontSize = '12px';
+        pendingMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        pendingMessage.style.color = '#fff';
+        image.parentNode.insertBefore(pendingMessage, image.nextSibling);
+        return pendingMessage;
+    }
+
     // Function to show reminder to user
-    function showReminder(x, y) {
+    function showReminder(message, x, y) {
         let reminder = document.createElement('div');
-        reminder.innerHTML = 'Title copied!';
+        reminder.innerHTML = message;
         reminder.style.position = 'fixed';
         reminder.style.top = y + 'px';
         reminder.style.left = x + 'px';
