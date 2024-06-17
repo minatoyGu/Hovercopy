@@ -1,10 +1,10 @@
 # Hovercopy
-Usage:
-This script allow user 
+Usage:<br />
+This script allow user <br />
 1. Copy the item name to clipboard while hovering on the item title on TaoBao. <br />
 2. Auto-download item images while hovering on the item image on TaoBao.<br />
 
-Install:
+Install:<br />
 1. Download TamperMonkey. <br />
 2. Copy the script -> Save new script. <br />
 3. Have fun! <br />
